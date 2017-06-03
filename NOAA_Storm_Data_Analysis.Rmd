@@ -1,3 +1,22 @@
+---
+title: "NOAA Storm Data Analysis"
+author: "Adrian Cortinas"
+date: "June 3rd, 2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Summary
+
+
+
+## Data Processing
+
+
+```{r echo=TRUE}
 rm(list = ls())
 
 getfile <- function(source_file, dest_file, file_type) {
@@ -21,4 +40,12 @@ getfile <- function(source_file, dest_file, file_type) {
       
       setwd(pwd)
 }
+```
+
+## Results
+
+
+```{r, echo=TRUE}
+
+```
 
