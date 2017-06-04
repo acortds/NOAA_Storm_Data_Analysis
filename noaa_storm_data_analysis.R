@@ -210,7 +210,7 @@ clean_storm_data$EVTYPE <- gsub("WILDFIRES",
                                 "WILDFIRE", clean_storm_data$EVTYPE)
 clean_storm_data$EVTYPE <- gsub("WND", 
                                 "WIND", clean_storm_data$EVTYPE)
-
+ 
 # Across the United States, which types of events (as indicated in the EVTYPE 
 # variable) are most harmful with respect to population health?
 
