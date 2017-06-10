@@ -95,6 +95,7 @@ storm_data <- read.csv(paste0("workdir/",files[1]),
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+options(warn=-1)
 
 # Clean Data
 event_list <- storm_data %>%
@@ -280,12 +281,12 @@ g <- ggplot(econo_data_t20,
                 y = total_event_dmg))
 
 g + geom_point(stat="identity") + 
-      geom_text(aes(label=total_dmg_m, color="Cost"), angle=90, hjust=-0.2, vjust=0.5) +
+      geom_text(aes(label=total_dmg_b, color="Cost"), angle=90, hjust=-0.2, vjust=0.5) +
       #ylim(0,3e+14) +
       ggtitle("Top 20 Cost of Catastrophic Natural Events") +
       labs(x="Natural Event", 
            y="Cost") +
-      scale_y_log10(limits = c(1e+8, 20e+16), labels = scales::dollar) +
+      scale_y_log10(limits = c(1e+6, 20e+16), labels = scales::dollar) +
       theme_bw(base_size = 10) +
       theme(plot.title = element_text(hjust = 0.5),
             legend.position = "none", 
