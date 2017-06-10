@@ -210,7 +210,7 @@ clean_storm_data$EVTYPE <- gsub("WILDFIRES",
                                 "WILDFIRE", clean_storm_data$EVTYPE)
 clean_storm_data$EVTYPE <- gsub("WND", 
                                 "WIND", clean_storm_data$EVTYPE)
- 
+
 # Across the United States, which types of events (as indicated in the EVTYPE 
 # variable) are most harmful with respect to population health?
 
@@ -233,15 +233,17 @@ g <- ggplot(health_data_t20,
             aes(x = reorder(event_type,
                             order(pct_fatalities, 
                                   decreasing=TRUE)), 
-                y = pct_fatalities))
+                y = pct_fatalities, fill=fatalities))
 
-g + geom_point() + 
+g + geom_bar(stat="identity") + 
+      geom_text(aes(label=fatalities, color="Fatalities"), angle=90, hjust=-0.5, vjust=0.5) +
+      ylim(0,100) +
       ggtitle("Top 20 Fatal Natural Events") +
       labs(x="Natural Event", 
            y="Fatality Percent") +
       theme_bw(base_size = 10) +
       theme(plot.title = element_text(hjust = 0.5),
-            #legend.position = "none", 
+            legend.position = "none", 
             axis.text.x = element_text(angle = 90, 
                                        hjust =1))
 
@@ -262,9 +264,9 @@ econo_data_t20 <- clean_storm_data %>%
       summarise(total_prop_dmg = sum(propdmgdll),
                 total_crop_dmg = sum(cropdmgdll),
                 total_event_dmg = total_prop_dmg+total_crop_dmg) %>%
-      mutate (total_prop_dmg_m=simplify_amt(total_prop_dmg,"M"),
-              total_crop_dmg_m=simplify_amt(total_crop_dmg,"M"),
-              total_dmg_m=simplify_amt(total_event_dmg,"M"),
+      mutate (total_prop_dmg_b=simplify_amt(total_prop_dmg,"B",2),
+              total_crop_dmg_b=simplify_amt(total_crop_dmg,"B",2),
+              total_dmg_b=simplify_amt(total_event_dmg,"B",2),
               pct_prop_dmg=round(total_prop_dmg/total_event_dmg,3)*100,
               pct_crop_dmg=round(total_crop_dmg/total_event_dmg,3)*100) %>%
       filter(total_event_dmg > 0) %>%
@@ -277,13 +279,15 @@ g <- ggplot(econo_data_t20,
                                   decreasing=TRUE)), 
                 y = total_event_dmg))
 
-g + geom_point() + 
-      ggtitle("Top 20 Economic Catastrophe of Natural Events") +
+g + geom_point(stat="identity") + 
+      geom_text(aes(label=total_dmg_m, color="Cost"), angle=90, hjust=-0.2, vjust=0.5) +
+      #ylim(0,3e+14) +
+      ggtitle("Top 20 Cost of Catastrophic Natural Events") +
       labs(x="Natural Event", 
-           y="Cost (Million's)") +
-      scale_y_log10(limits = c(1e+8, 2e+14)) +
+           y="Cost") +
+      scale_y_log10(limits = c(1e+8, 20e+16), labels = scales::dollar) +
       theme_bw(base_size = 10) +
       theme(plot.title = element_text(hjust = 0.5),
             legend.position = "none", 
             axis.text.x = element_text(angle = 90, 
-                                       hjust = 1))
+                                       hjust =1))
