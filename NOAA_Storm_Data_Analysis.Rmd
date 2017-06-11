@@ -1,7 +1,7 @@
 ---
 title: "NOAA Storm Data Analysis"
 author: "Adrian Cortinas"
-date: "June 3rd, 2017"
+date: "June 11th, 2017"
 output: github_document
 ---
 
@@ -10,10 +10,25 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Summary
+Natural events in the USA have large consequences in public's health in the 
+form of injuries or fatalities, and economic cost in the form of infrastructure 
+or agriculture damage.
 
+The National Oceanic and Atmospheric Administration, or NOAA, have been recollecting
+data since 1950 about all these events happening in the USA. The data comprises
+when the event did occur, where the event happened, how many people was affected, 
+what was affected and the cost of such damaged.
+
+The purpose of this document is to help determine what has been the impact on
+public's health and the cost of damages for the events that occur since 1950 till 
+November 2011.
 
 
 ## Data Processing
+
+In order to analyse the data, first we need to get the data. The following section
+covers some functions used during the analysis, and we load the R libraries needed
+to perform such analysis.
 
 ```{r echo=TRUE}
 # Functions
@@ -91,6 +106,18 @@ simplify_amt <- function(quantity, mny_unit = "M", precision = 3){
       }
 }
 
+# Load libraries
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+options(warn=-1)
+```
+
+## Get the Data
+The data we are going to use is located in a shared server. We'll get the data
+and load it into a variable named storm_data.
+```{r echo=TRUE}
 # Get file
 files <- getfile("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
                  "stormdata.csv.bz2", 
@@ -101,26 +128,19 @@ storm_data <- read.csv(paste0("workdir/",files[1]),
                        na.strings = "NA", 
                        stringsAsFactors = T)
 
-# Load libraries
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 
-options(warn=-1)
 ```
 
 ## Clean Data
 
+The data is found to contain several naming inconsistencies, some of these are 
+significant some others not, still we'll clean the data to have a better representation
+of the actual results.
+
+The result of this clean effort will be put in clean_storm_data data frame, this to
+not affect the original data.
 ```{r, echo=TRUE}
 # Clean Data
-event_list <- storm_data %>%
-      select (1:37) %>%
-      mutate (EVTYPE = toupper(EVTYPE)) %>%
-      group_by(EVTYPE) %>%
-      count() %>%
-      distinct() %>%
-      arrange(EVTYPE)
-
 clean_storm_data <- storm_data %>%
       mutate (EVTYPE = toupper(EVTYPE))
 
@@ -229,6 +249,12 @@ clean_storm_data$EVTYPE <- gsub("WND",
 ```
 
 # Analysis
+So we have to questions in place, what's been the effect of these events, what 
+have been the most harmful to overall population and which of these events have 
+had the greatest economic consequences.
+
+The following will obtain the top 20 total number of demised and injured people
+per event.
 ```{r echo=TRUE}
 # Across the United States, which types of events (as indicated in the EVTYPE 
 # variable) are most harmful with respect to population health?
@@ -246,7 +272,10 @@ health_data_t20 <- clean_storm_data %>%
       filter(total_event > 0) %>%
       arrange(desc(pct_fatalities)) %>%
       top_n(20,fatalities )
+```
 
+The following will obtain the top 20 economical impact by event.
+```{r echo=TRUE}
 # Across the United States, which types of events have the greatest economic 
 # consequences?
 econo_data_all <- clean_storm_data %>%
@@ -276,6 +305,12 @@ econo_data_t20 <- econo_data_all %>%
 ```
 
 # Results
+## Health Impact
+The following graph list the top 20 event by fatal casualties. 80% of the victims
+have died of extreme cold/wind chill weather, this is 125 persons in the past 60 
+years. This is followed by avalanches with about 60% of demises, or 225 persons. 
+On the far right we have tornadoes, with only 6% of demises, this is 5633 persons.
+
 ```{r echo=TRUE}
 g <- ggplot(health_data_t20, 
             aes(x = reorder(event_type,
@@ -296,6 +331,12 @@ g + geom_bar(stat="identity") +
                                        hjust =1))
 ```
 
+## Economic impact
+The following graph shows the economic impact of natural events for the past 60 
+years. Though the number of casualties are low for flood and tornados,
+these 2 alone represent 200 Billion dollars combined in property and crop damages.
+Most of natural events are difficult to prevent their damage, reinforcing structures
+or protecting crops could help alleviate some of these costs.
 
 ```{r echo=TRUE}
 g <- ggplot(econo_data_t20, 
@@ -317,3 +358,17 @@ g + geom_point(stat="identity") +
                                        hjust =1))
 ```
 
+# Conclusion
+It is of importance to consider why these persons have died and
+to take appropriate actions to help save more people. People dying of extreme cold could
+be homeless people, cities accross the nation could help provide heat blankets or 
+taking more people to shelters. Educational programs could help prevent avalanche 
+and rip currents casualties.
+
+For events that cannot be prevented or controlled in any way, such as tornados and
+flood/flash flood, more policies could be put in place to help people protect 
+themselves or avoid construction on high risk areas.
+
+Further analysis is needed to see how health and economic impact has been reduced
+over time, and what kind of preventative methods have helped minimize people's 
+injuries and property costs.
