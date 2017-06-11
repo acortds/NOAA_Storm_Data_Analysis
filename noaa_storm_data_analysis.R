@@ -48,15 +48,22 @@ get_amount <- function(quantity, expression){
       K<-1e+3
       M<-1e+6
       B<-1e+9
-      if (expression == "K") {
+      expression <- toupper(as.character(expression))
+      if (identical(expression,"K")) {
+            #print("Yes K")
             return(quantity*K)
-      } else if (expression == "M") {
-            return(quantity*M)
-      } else if (expression == "B") {
-            return(quantity*B)
-      } else { 
-            return(quantity)
-      }
+      }  else
+            if (identical(expression,"M")) {
+                  #print("Yes M")
+                  return(quantity*M)
+            } else 
+                  if (identical(expression,"B")) {
+                        #print("Yes B")
+                        return(quantity*B)
+                  } else { 
+                        #print("Yes NOthing") 
+                        return(quantity) 
+                  }
 }
 
 # Function to translate natural numbers to their correspoding in K (thousand's)
@@ -66,15 +73,15 @@ simplify_amt <- function(quantity, mny_unit = "M", precision = 3){
       K<-1e+3
       M<-1e+6
       B<-1e+9
-      if (mny_unit == "K") {
+      if (identical(mny_unit,"K")) {
             return(paste0(round(quantity/K,
                                 digits = precision),
                           "K"))
-      } else if (mny_unit == "M") {
+      } else if (identical(mny_unit,"M")) {
             return(paste0(round(quantity/M,
                                 digits = precision),
                           "M"))
-      } else if (mny_unit == "B") {
+      } else if (identical(mny_unit,"B")) {
             return(paste0(round(quantity/B,
                                 digits = precision),
                           "B"))
@@ -98,13 +105,13 @@ library(ggplot2)
 options(warn=-1)
 
 # Clean Data
-event_list <- storm_data %>%
-      select (1:37) %>%
-      mutate (EVTYPE = toupper(EVTYPE)) %>%
-      group_by(EVTYPE) %>%
-      count() %>%
-      distinct() %>%
-      arrange(EVTYPE)
+# event_list <- storm_data %>%
+#       select (1:37) %>%
+#       mutate (EVTYPE = toupper(EVTYPE)) %>%
+#       group_by(EVTYPE) %>%
+#       count() %>%
+#       distinct() %>%
+#       arrange(EVTYPE)
 
 clean_storm_data <- storm_data %>%
       mutate (EVTYPE = toupper(EVTYPE))
@@ -251,17 +258,18 @@ g + geom_bar(stat="identity") +
 # Across the United States, which types of events have the greatest economic 
 # consequences?
 
-econo_data_t20 <- clean_storm_data %>%
+econo_data_all <- clean_storm_data %>%
       select (EVTYPE, 
               PROPDMG,
               PROPDMGEXP,
               CROPDMG,
-              CROPDMGEXP,
-              WFO) %>%
-      mutate(event_type=EVTYPE) %>%
-      group_by(event_type) %>%
+              CROPDMGEXP) %>%
+      rowwise() %>%
       mutate (propdmgdll = get_amount(PROPDMG, PROPDMGEXP), 
-              cropdmgdll = get_amount(CROPDMG, CROPDMGEXP)) %>%
+              cropdmgdll = get_amount(CROPDMG, CROPDMGEXP)) 
+
+econo_data_t20 <- econo_data_all %>%
+      group_by(EVTYPE) %>%
       summarise(total_prop_dmg = sum(propdmgdll),
                 total_crop_dmg = sum(cropdmgdll),
                 total_event_dmg = total_prop_dmg+total_crop_dmg) %>%
@@ -275,18 +283,17 @@ econo_data_t20 <- clean_storm_data %>%
       top_n(20,total_event_dmg)
 
 g <- ggplot(econo_data_t20, 
-            aes(x = reorder(event_type,
+            aes(x = reorder(EVTYPE,
                             order(total_event_dmg, 
                                   decreasing=TRUE)), 
                 y = total_event_dmg))
 
 g + geom_point(stat="identity") + 
       geom_text(aes(label=total_dmg_b, color="Cost"), angle=90, hjust=-0.2, vjust=0.5) +
-      #ylim(0,3e+14) +
       ggtitle("Top 20 Cost of Catastrophic Natural Events") +
       labs(x="Natural Event", 
            y="Cost") +
-      scale_y_log10(limits = c(1e+6, 20e+16), labels = scales::dollar) +
+      scale_y_log10(limits = c(1e+8, 3e+12), labels = scales::dollar) +
       theme_bw(base_size = 10) +
       theme(plot.title = element_text(hjust = 0.5),
             legend.position = "none", 
